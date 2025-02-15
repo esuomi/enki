@@ -10,17 +10,21 @@ import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { store } from 'store/store';
 import { selectAuthLoaded, updateAuth } from 'auth/authSlice';
 import { selectConfigLoaded, updateConfig } from 'config/configSlice';
-import { normalizeAllUrls } from 'helpers/url';
 import { EnkiIntlProvider } from 'i18n/EnkiIntlProvider';
 import { Provider } from 'react-redux';
 import './styles/index.scss';
-import { browserTracingIntegration } from '@sentry/react';
+import { LandingPage } from './scenes/App/LandingPage';
+import {
+  ComponentToggle,
+  ComponentToggleProvider,
+  ToggleFlags,
+} from '@entur/react-component-toggle';
 
 const initSentry = (dsn?: string) => {
   if (dsn) {
     Sentry.init({
       dsn: dsn,
-      integrations: [browserTracingIntegration()],
+      integrations: [Sentry.browserTracingIntegration()],
 
       // We recommend adjusting this value in production, or using tracesSampler
       // for finer control
@@ -28,9 +32,6 @@ const initSentry = (dsn?: string) => {
 
       release: import.meta.env.REACT_APP_VERSION,
       attachStacktrace: true,
-      beforeSend(e) {
-        return normalizeAllUrls(e);
-      },
     });
   }
 };
@@ -51,7 +52,22 @@ const AuthenticatedApp = () => {
         <App />
       </Apollo>
     )) ||
-    null
+    (authStateLoaded && configStateLoaded && (
+      <ComponentToggle
+        feature={`${config.extPath}/LandingPage`}
+        renderFallback={() => <LandingPage />}
+      />
+    ))
+  );
+};
+
+const EnkiApp = () => {
+  return (
+    <EnkiIntlProvider>
+      <AuthProvider>
+        <AuthenticatedApp />
+      </AuthProvider>
+    </EnkiIntlProvider>
   );
 };
 
@@ -65,13 +81,33 @@ const renderIndex = async () => {
   root.render(
     <Sentry.ErrorBoundary>
       <ConfigContext.Provider value={config}>
-        <Provider store={store}>
-          <EnkiIntlProvider>
-            <AuthProvider>
-              <AuthenticatedApp />
-            </AuthProvider>
-          </EnkiIntlProvider>
-        </Provider>
+        <ComponentToggleProvider
+          flags={(config.sandboxFeatures || {}) as ToggleFlags}
+          maxFeatureDepth={2}
+          importFn={(featurePathComponents) => {
+            if (featurePathComponents.length === 1) {
+              return import(`./ext/${featurePathComponents[0]}/index.ts`);
+            } else if (featurePathComponents.length === 2) {
+              return import(
+                `./ext/${featurePathComponents[0]}/${featurePathComponents[1]}/index.ts`
+              );
+            } else {
+              throw new Error('Max feature depth is 2');
+            }
+          }}
+        >
+          <Provider store={store}>
+            <ComponentToggle feature={`${config.extPath}/CustomStyle`} />
+            <ComponentToggle
+              feature={`${config.extPath}/CustomIntlProvider`}
+              renderFallback={() => <EnkiApp />}
+            >
+              <AuthProvider>
+                <AuthenticatedApp />
+              </AuthProvider>
+            </ComponentToggle>
+          </Provider>
+        </ComponentToggleProvider>
       </ConfigContext.Provider>
     </Sentry.ErrorBoundary>,
   );
