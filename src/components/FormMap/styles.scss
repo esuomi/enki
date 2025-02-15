@@ -1,0 +1,29 @@
+.map-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+  z-index: 1;
+  min-height: 65rem;
+  max-height: 78rem;
+
+  @media only screen and (max-width: 1950px) {
+    min-width: 61%;
+  }
+
+  @media only screen and (max-width: 1400px) {
+    min-width: 25rem;
+  }
+
+  .map {
+    flex: 1;
+    border: 1px solid;
+    cursor: pointer;
+  }
+
+  .undo-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+  }
+}

@@ -6,6 +6,8 @@ is designed to support code splitting, so that each feature will be compiled int
 will then postpone the downloading of any given chunk until it decides it's time to render the component
 inside.
 
+We use the library react-component-toggle to support sandbox features.
+
 ## How to develop a sandbox feature
 
 Sandbox features are placed in a folder with the same name as the feature. The feature name should be added
@@ -17,7 +19,7 @@ export should be the main entry (React) component of your sandbox feature.
 Example with a feature called `foobar`:
 
     //  ext/foobar/index.ts
-    const Foobar: SandboxComponent<FoobarProps> = (props) => {
+    const Foobar: FeatureComponent<FoobarProps> = (props) => {
         return (
             <h1>{props.foo}</h1>
         )
@@ -29,7 +31,7 @@ The folder must also have
 a types.d.ts file which exports the props type declaration for your component.
 
     // ext/foobar/types.d.ts
-    export type FoobarProps extends SandboxFeatureProps = {
+    export interface FoobarProps {
         foo: string;
     }
 
@@ -39,7 +41,7 @@ to your component's runtime code.
 To use your sandbox feature in the main code, you'll use the SandboxFeature component
 to wrap it:
 
-    <SandboxFeature<FoobarProps>
+    <ComponentToggle<SandboxFeatures, FoobarProps>
         feature="foobar"
         foo="bar"
     />
@@ -52,7 +54,7 @@ If "foobar" is `true` it will render:
 A `renderFallback` function prop is also available to give the option to render something else
 if the feature is not enabled:
 
-    <SandboxFeature<FoobarProps>
+    <ComponentToggle<SandboxFeatures, FoobarProps>
         feature="foobar"
         foo="bar"
         renderFallback={() => <h1>foo</h1>}
@@ -101,14 +103,33 @@ and configuration setting:
 
 You can reference each sub-level feature as follows:
 
-    <SandboxFeature<FoobarProps>
+    <ComponentToggle<SandboxFeatures, FoobarProps>
         feature="foobar/foo"
         foo="bar"
     />
 
 and
 
-    <SandboxFeature<FoobarProps>
+    <ComponentToggle<SandboxFeatures, FoobarProps>
         feature="foobar/bar"
         bar="foo"
     />
+
+## How to include stylesheets in sandbox components
+
+Importing stylesheets directly must be avoided, because the bundler will preload it regardless of the configuration.
+Therefore, stylesheets must be imported using the `url` option, and rendered inside `Helmet`:
+
+    import stylesheetUrl from './styles.scss?url';
+    import Helmet from 'react-helmet';
+
+    export const SomeComponent: FeatureComponent = () => {
+        return (
+            <>
+                <Helmet>
+                    <link href={stylesheetUrl} rel="stylesheet" media="all" />
+                </Helmet>
+                <p>My content</p>
+            </>
+        );
+    }

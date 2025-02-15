@@ -28,6 +28,7 @@ const Exports = () => {
   const exports: ExportsState = useAppSelector((state) => state.exports);
   const intl = useIntl();
   const { formatMessage, locale } = intl;
+  const { hideExportDryRun } = useConfig();
 
   const dispatch = useAppDispatch();
 
@@ -56,18 +57,20 @@ const Exports = () => {
                 <SecondarySquareButton
                   onClick={async (event: React.MouseEvent<HTMLElement>) => {
                     event.stopPropagation();
-                    download(uttuApiUrl, e, await auth.getAccessToken());
+                    download(uttuApiUrl, e, await auth.getAccessToken(), intl);
                   }}
                 >
                   <DownloadIcon />
                 </SecondarySquareButton>
               )}
             </DataCell>
-            <DataCell>
-              {e.dryRun
-                ? formatMessage({ id: 'exportsDryRunYes' })
-                : formatMessage({ id: 'exportsDryRunNo' })}
-            </DataCell>
+            {!hideExportDryRun && (
+              <DataCell>
+                {e.dryRun
+                  ? formatMessage({ id: 'exportsDryRunYes' })
+                  : formatMessage({ id: 'exportsDryRunNo' })}
+              </DataCell>
+            )}
           </TableRow>
         ))
       ) : (
@@ -97,11 +100,7 @@ const Exports = () => {
     <div className="exports">
       <Heading1>{formatMessage({ id: 'exportsHeader' })}</Heading1>
 
-      <SecondaryButton
-        as={Link}
-        to="/exports/create"
-        className="create-export-button"
-      >
+      <SecondaryButton as={Link} to="/exports/create" className="create">
         <AddIcon />
         {formatMessage({ id: 'exportsCreateExportButtonLabel' })}
       </SecondaryButton>
@@ -121,9 +120,11 @@ const Exports = () => {
             <HeaderCell>
               {formatMessage({ id: 'exportsTableHeaderLabelDownload' })}
             </HeaderCell>
-            <HeaderCell>
-              {formatMessage({ id: 'exportsTableHeaderLabelDryrun' })}
-            </HeaderCell>
+            {!hideExportDryRun && (
+              <HeaderCell>
+                {formatMessage({ id: 'exportsTableHeaderLabelDryrun' })}
+              </HeaderCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>{renderTableRows()}</TableBody>

@@ -10,11 +10,13 @@ import React, { useState } from 'react';
 import { useIntl } from 'react-intl';
 import { Link, useLocation } from 'react-router-dom';
 import UserPreference from 'scenes/App/NavBar/UserPreference';
-import logo from 'static/img/logo.png';
 import { useAppSelector } from '../../../store/hooks';
 import LanguagePicker from './LanguagePicker';
 import LogoutChip from './LogoutChip';
 import './styles.scss';
+import Logo from './Logo';
+import { useConfig } from '../../../config/ConfigContext';
+import { ComponentToggle } from '@entur/react-component-toggle';
 
 const isActive = (pathname: string, path: string) =>
   pathname.split('/')[1] === path.split('/')[1];
@@ -72,24 +74,21 @@ const NavBar = () => {
     showConfirm: false,
     path: '',
   });
+  const { extPath } = useConfig();
 
   const isAdmin = useAppSelector((state) => state.userContext.isAdmin);
 
   return (
     <Contrast as="nav" className="navbar-wrapper">
       <SideNavigation className="side-navigation">
-        <Link to="/">
-          <div className="logo-wrapper">
-            <img
-              className="logo"
-              src={logo}
-              alt={formatMessage({ id: 'navBarRootLinkLogoAltText' })}
-            />
-            <span>{formatMessage({ id: 'appTitle' })}</span>
-          </div>
+        <Link to={'/'}>
+          <ComponentToggle
+            feature={`${extPath}/CustomLogo`}
+            renderFallback={() => <Logo />}
+          />
         </Link>
 
-        {providers && providers.length > 0 && <UserPreference />}
+        <UserPreference providers={providers} />
 
         {active && (
           <>
@@ -127,6 +126,11 @@ const NavBar = () => {
               setRedirect={setRedirect}
             />
             <NavBarItem
+              text={formatMessage({ id: 'navBarBrandingsMenuItemLabel' })}
+              path="/brandings"
+              setRedirect={setRedirect}
+            />
+            <NavBarItem
               text={formatMessage({ id: 'navBarExportsMenuItemLabel' })}
               path="/exports"
               setRedirect={setRedirect}
@@ -142,6 +146,11 @@ const NavBar = () => {
             setRedirect={setRedirect}
           />
         )}
+
+        <ComponentToggle
+          feature={`${extPath}/Navbar`}
+          renderFallback={() => <></>}
+        />
       </SideNavigation>
 
       <div className="bottom-chips">

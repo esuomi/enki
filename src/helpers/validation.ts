@@ -6,7 +6,7 @@ import {
   parseISO,
 } from 'date-fns';
 import { isBlank, objectValuesAreEmpty } from 'helpers/forms';
-import { MessagesKey } from 'i18n/translations/translationKeys';
+import { MessagesKey } from 'i18n/translationKeys';
 import BookingArrangement from 'model/BookingArrangement';
 import DayType from 'model/DayType';
 import FlexibleLine, { FlexibleLineType } from 'model/FlexibleLine';
@@ -139,6 +139,7 @@ export const validFlexibleLineJourneyPattern = (
 };
 
 export const validateStopPoints = (stopPoints: StopPoint[]): boolean =>
+  stopPoints.length >= 2 &&
   getStopPointsErrors(stopPoints).every((stopPointErrors) =>
     objectValuesAreEmpty(stopPointErrors),
   );
@@ -245,13 +246,6 @@ export const validateServiceJourney = (
   const validDayTimes = (sj.dayTypes?.[0]?.daysOfWeek?.length ?? 0) > 0;
   const { isValid } = validateTimes(sj.passingTimes ?? [], intl);
   const validDayTypes = validateDayTypes(sj.dayTypes);
-  console.log('validateServiceJourney', {
-    sj,
-    validName: !isBlankName,
-    validDayTimes,
-    validPassingTimes: isValid,
-    validDayTypes,
-  });
   return !isBlankName && isValid && validDayTimes && validDayTypes;
 };
 
